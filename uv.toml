@@ -1,0 +1,10 @@
+# uv-specific config: extra package indexes.
+# MotrixSim is on public PyPI — no extra index required for the engine.
+# The entry below is only used when you install with the [skrl-torch] or
+# [rslrl] extras and need CUDA-12.8 PyTorch wheels; harmless to keep.
+
+[[index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+
+prerelease = "allow"

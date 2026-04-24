@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+eggs/
+.eggs/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# UV
+.uv/
+uv.lock
+
+# Training artifacts
+runs/
+checkpoints/
+wandb/
+logs/
+*.pickle
+*.pt
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store

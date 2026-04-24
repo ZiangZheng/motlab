@@ -1,0 +1,47 @@
+[project]
+name = "motlab"
+version = "0.1.0"
+description = "MotLab — a GPU-native reinforcement learning framework for robot training, built on MotrixSim."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "MotLab Contributors" }]
+requires-python = ">=3.10,<3.12"
+
+[project.optional-dependencies]
+docs = [
+    "sphinx",
+    "myst-parser",
+    "sphinx-copybutton",
+    "sphinx-design",
+    "pydata-sphinx-theme",
+]
+dev = [
+    "ruff>=0.5",
+    "pytest>=8",
+    "pre-commit>=3",
+]
+
+# --- uv workspace (optional; ignored by plain pip) -------------------------
+[tool.uv.workspace]
+members = ["packages/motlab_envs", "packages/motlab_rl"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+motlab-envs = { workspace = true }
+motlab-rl = { workspace = true }
+
+# --- ruff ------------------------------------------------------------------
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]
+
+# --- pytest ----------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["test", "packages"]
+addopts = "-ra -q"

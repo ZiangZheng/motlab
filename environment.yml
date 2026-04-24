@@ -1,0 +1,16 @@
+name: motlab
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - numpy>=1.26
+  - pip:
+      - gymnasium==1.1.1
+      - absl-py>=2.0
+      - pyyaml>=6
+      - motrixsim>=0.7.0
+      # After `conda env create -f environment.yml && conda activate motlab`,
+      # install the workspace packages in editable mode:
+      #   pip install -e packages/motlab_envs -e "packages/motlab_rl[rslrl]"

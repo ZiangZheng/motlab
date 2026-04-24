@@ -1,0 +1,15 @@
+# Reference SKRL PPO config (matches motlab_rl.skrl.config).
+num_envs: 1024
+rollouts: 24
+experiment_name: motlab-skrl
+runner:
+  seed: 42
+  timesteps: 100000
+  rollouts: 24
+  learning_epochs: 5
+  mini_batches: 4
+  discount_factor: 0.99
+  lambda_: 0.95
+  learning_rate: 0.0003
+  clip_ratio: 0.2
+  entropy_loss_scale: 0.01
