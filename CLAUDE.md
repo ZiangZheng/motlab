@@ -75,16 +75,21 @@ motlab/
     │       └── locomotion/
     │           └── velocity/go1/go1_velocity_env_cfg.py
     │
-    └── motlab_rl/                    # RL INTEGRATION (rsl_rl PPO)
+    └── motlab_rl/                    # RL INTEGRATION (rsl_rl + skrl PPO)
         └── src/motlab_rl/
             ├── __init__.py           # imports motlab + motlab_tasks to register
-            ├── registry.py           # @rlcfg / default_rl_cfg / list_registered
+            ├── registry.py           # @rlcfg / @skrlcfg + default_{rl,skrl}_cfg
             ├── utils.py              # apply_overrides, DeviceSupports
-            ├── wrappers/rslrl.py     # RslrlVecEnv (TensorDict obs)
+            ├── wrappers/
+            │   ├── rslrl.py          # RslrlVecEnv (TensorDict obs)
+            │   └── skrl.py           # SkrlVecEnv (skrl Wrapper, flat obs)
             ├── rslrl/
             │   ├── cfg.py            # RslrlCfg + obs_groups
             │   └── torch/train.py    # RslrlTrainer (OnPolicyRunner)
-            └── tasks/{cartpole,go1_velocity}.py
+            ├── skrl/
+            │   ├── cfg.py            # SkrlCfg (PPO_CFG-shaped subset)
+            │   └── torch/train.py    # SkrlTrainer (PPO + RandomMemory + SeqTrainer)
+            └── tasks/{cartpole,go1_velocity}.py   # both @rlcfg + @skrlcfg per env
 ```
 
 ## Install
@@ -102,19 +107,20 @@ Step-by-step alternatives:
 
 ```bash
 # uv
-uv sync --all-packages --extra rslrl
+uv sync --all-packages --extra rslrl              # or --extra skrl, or both
+uv sync --all-packages --extra rslrl --extra skrl
 
 # conda + pip
 conda env create -f environment.yml
 conda activate motlab
 pip install -e packages/motlab -e packages/motlab_assets \
-            -e packages/motlab_tasks -e "packages/motlab_rl[rslrl]"
+            -e packages/motlab_tasks -e "packages/motlab_rl[rslrl,skrl]"
 
 # plain pip
 python3.10 -m venv .venv && source .venv/bin/activate
 pip install motrixsim torch
 pip install -e packages/motlab -e packages/motlab_assets \
-            -e packages/motlab_tasks -e "packages/motlab_rl[rslrl]"
+            -e packages/motlab_tasks -e "packages/motlab_rl[rslrl,skrl]"
 ```
 
 ## Common commands
@@ -126,8 +132,9 @@ pytest test/ -q
 # Quick random-action rollout
 python scripts/view.py --env cartpole
 
-# Train (rsl_rl PPO)
+# Train (PPO; --framework {rslrl,skrl}, default rslrl)
 python scripts/train.py --env cartpole
+python scripts/train.py --env cartpole --framework skrl
 python scripts/train.py --env go1-velocity --num-envs 128 --seed 123
 
 # Benchmark throughput
@@ -159,7 +166,8 @@ python scripts/play.py --env cartpole --policy runs/cartpole/.../model.pt
    `import motlab_tasks` triggers its `@envcfg` decorator.
 5. **RL hyperparameters** — add a file under
    `packages/motlab_rl/src/motlab_rl/tasks/<name>.py` and decorate the cfg
-   with `@rlcfg("<name>")`.
+   with `@rlcfg("<name>")` (rsl_rl) and/or `@skrlcfg("<name>")` (skrl).
+   Each env may register one, the other, or both.
 
 ## Conventions
 

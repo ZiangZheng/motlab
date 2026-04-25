@@ -1,11 +1,12 @@
-"""Default rsl_rl PPO config for the go1 velocity-tracking env."""
+"""Default rsl_rl + skrl PPO configs for the go1 velocity-tracking env."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from motlab_rl.registry import rlcfg
+from motlab_rl.registry import rlcfg, skrlcfg
 from motlab_rl.rslrl.cfg import RslrlAlgorithmCfg, RslrlCfg, RslrlPolicyCfg, RslrlRunnerCfg
+from motlab_rl.skrl.cfg import SkrlAgentCfg, SkrlCfg, SkrlPolicyCfg, SkrlRunnerCfg
 
 
 @rlcfg("go1-velocity")
@@ -34,6 +35,35 @@ class Go1VelocityRslrlCfg(RslrlCfg):
             num_steps_per_env=24,
             max_iterations=2000,
             save_interval=100,
+            experiment_name="go1_velocity",
+        )
+    )
+
+
+@skrlcfg("go1-velocity")
+@dataclass
+class Go1VelocitySkrlCfg(SkrlCfg):
+    num_envs: int = 128
+    agent: SkrlAgentCfg = field(
+        default_factory=lambda: SkrlAgentCfg(
+            rollouts=24,
+            learning_epochs=5,
+            mini_batches=4,
+            discount_factor=0.99,
+            gae_lambda=0.95,
+            entropy_loss_scale=0.005,
+            learning_rate=1e-3,
+        )
+    )
+    policy: SkrlPolicyCfg = field(
+        default_factory=lambda: SkrlPolicyCfg(
+            hidden_dims=(512, 256, 128),
+            init_noise_std=1.0,
+        )
+    )
+    runner: SkrlRunnerCfg = field(
+        default_factory=lambda: SkrlRunnerCfg(
+            timesteps=2000 * 24,
             experiment_name="go1_velocity",
         )
     )

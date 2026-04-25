@@ -4,7 +4,8 @@
 #
 #   bash scripts/install.sh                        # auto-detect + rsl_rl extra
 #   bash scripts/install.sh --method uv
-#   bash scripts/install.sh --method conda --rllib skrl-torch
+#   bash scripts/install.sh --method conda --rllib skrl
+#   bash scripts/install.sh --method pip   --rllib both
 #   bash scripts/install.sh --method pip   --python 3.11
 #   bash scripts/install.sh --no-extras            # envs only, no RL framework
 #   bash scripts/install.sh --dev                  # + dev tooling (pytest, ruff)
@@ -28,7 +29,7 @@ usage() {
 
 Options
   --method {auto,uv,conda,pip}   Installer to use (default: auto).
-  --rllib  {rslrl,none}          RL framework extra to install (default: rslrl).
+  --rllib  {rslrl,skrl,both,none} RL framework extra to install (default: rslrl).
   --python <ver>                 Python version for new venv/conda env (default: 3.10).
   --env <name>                   Conda env name (default: motlab).
   --venv-dir <path>              Path for pip/uv venv (default: .venv).
@@ -84,12 +85,14 @@ fi
 # Build extras string: e.g. "rslrl" -> "packages/motlab_rl[rslrl]"
 # ---------------------------------------------------------------------------
 case "$RLLIB" in
-    rslrl)
+    rslrl|skrl)
         RL_PKG_SPEC="packages/motlab_rl[$RLLIB]" ;;
+    both)
+        RL_PKG_SPEC="packages/motlab_rl[rslrl,skrl]" ;;
     none)
         RL_PKG_SPEC="packages/motlab_rl" ;;
     *)
-        die "Unknown --rllib value: $RLLIB (expected rslrl|none)" ;;
+        die "Unknown --rllib value: $RLLIB (expected rslrl|skrl|both|none)" ;;
 esac
 
 # ---------------------------------------------------------------------------
@@ -101,7 +104,11 @@ install_uv() {
 
     uv venv --python "$PYTHON_VERSION" "$VENV_DIR"
     local extra=()
-    [[ "$RLLIB" != "none" ]] && extra+=(--extra "$RLLIB")
+    case "$RLLIB" in
+        rslrl|skrl) extra+=(--extra "$RLLIB") ;;
+        both)       extra+=(--extra rslrl --extra skrl) ;;
+        none)       : ;;
+    esac
     [[ "$DEV" == "1" ]] && extra+=(--extra dev)
 
     # Sync all workspace packages (motlab core + assets + tasks + rl).

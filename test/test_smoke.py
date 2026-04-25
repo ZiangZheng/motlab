@@ -95,6 +95,21 @@ def test_rl_default_cfg_lookup():
     assert cfg.runner.experiment_name
 
 
+def test_skrl_default_cfg_lookup():
+    import motlab_rl
+    from motlab_rl.skrl.cfg import SkrlCfg
+
+    cfg = motlab_rl.default_skrl_cfg("cartpole")
+    assert isinstance(cfg, SkrlCfg)
+    assert cfg.num_envs > 0
+    assert cfg.agent.rollouts > 0
+    assert cfg.runner.experiment_name
+
+    assert "cartpole" in motlab_rl.list_registered("rslrl")
+    assert "cartpole" in motlab_rl.list_registered("skrl")
+    assert "go1-velocity" in motlab_rl.list_registered("skrl")
+
+
 def test_unknown_env_raises():
     import motlab
 

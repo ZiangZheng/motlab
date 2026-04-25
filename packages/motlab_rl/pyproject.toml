@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "motlab-rl"
 version = "0.1.0"
-description = "MotLab RL — rsl_rl PPO trainer for MotLab manager-based environments."
+description = "MotLab RL — rsl_rl + skrl PPO trainers for MotLab manager-based environments."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [{ name = "MotLab Contributors" }]
@@ -22,6 +22,11 @@ dependencies = [
 rslrl = [
     "rsl-rl-lib==3.1.2",
     "torch>=2.5",
+]
+skrl = [
+    "skrl>=2.0",
+    "torch>=2.5",
+    "gymnasium>=0.29",
 ]
 test = ["pytest>=8"]
 
