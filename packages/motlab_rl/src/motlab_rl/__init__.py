@@ -1,19 +1,11 @@
-"""MotLab RL framework integrations."""
+"""MotLab RL framework integrations (rsl_rl)."""
 
-from motlab_rl import registry  # noqa: F401
+# Pulling in the env library + bundled tasks ensures every @envcfg /
+# @rlcfg decorator has fired before users call default_rl_cfg / make_cfg.
+import motlab  # noqa: F401
+import motlab_tasks  # noqa: F401
+from motlab_rl import tasks  # noqa: F401  (registers RL hyperparameters)
+from motlab_rl.registry import default_rl_cfg, list_registered, rlcfg  # noqa: F401
 
-# Importing the tasks subpackage triggers per-env RL config registration.
-# Tasks registered here can silently fail to register if their underlying
-# env is missing (because, e.g., motrixsim isn't installed) — in that case
-# we warn and continue so pure-Python inspection still works.
-try:
-    from motlab_rl import tasks  # noqa: F401
-except ValueError:
-    import logging
-
-    logging.getLogger(__name__).warning(
-        "Could not auto-register RL task configs (likely because engine is "
-        "missing and envs didn't auto-register). Install motrixsim to enable."
-    )
-
-__version__ = "0.1.0"
+__version__ = "0.2.0"
+__all__ = ["rlcfg", "default_rl_cfg", "list_registered"]

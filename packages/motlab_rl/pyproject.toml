@@ -5,31 +5,22 @@ build-backend = "hatchling.build"
 [project]
 name = "motlab-rl"
 version = "0.1.0"
-description = "MotLab RL — unified training interface for MotLab environments (SKRL / rsl_rl)."
+description = "MotLab RL — rsl_rl PPO trainer for MotLab manager-based environments."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [{ name = "MotLab Contributors" }]
 requires-python = ">=3.10,<3.13"
 dependencies = [
-    "motlab-envs",
-    "gymnasium==1.1.1",
+    "motlab",
+    "motlab-tasks",
     "absl-py>=2.0",
     "pyyaml>=6",
     "tensorboard>=2.15",
 ]
 
 [project.optional-dependencies]
-skrl-torch = [
-    "skrl==1.4.3",
-    "torch>=2.5",
-]
-skrl-jax = [
-    "skrl==1.4.3",
-    "jax[cuda12]==0.4.34; sys_platform == 'linux'",
-    "flax==0.10.4; sys_platform == 'linux'",
-]
 rslrl = [
-    "rsl-rl-lib>=4.0.0",
+    "rsl-rl-lib==3.1.2",
     "torch>=2.5",
 ]
 test = ["pytest>=8"]
@@ -38,4 +29,4 @@ test = ["pytest>=8"]
 packages = ["src/motlab_rl"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/motlab_rl", "templates", "README.md"]
+include = ["src/motlab_rl", "README.md"]

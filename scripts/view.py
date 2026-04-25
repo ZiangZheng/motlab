@@ -7,26 +7,24 @@ import torch
 from absl import app, flags
 
 _ENV = flags.DEFINE_string("env", "cartpole", "Env name.")
-_SIM_BACKEND = flags.DEFINE_string("sim-backend", None, "Sim backend.")
 _NUM_ENVS = flags.DEFINE_integer("num-envs", 4, "Parallel envs.")
 _STEPS = flags.DEFINE_integer("steps", 500, "Number of control steps.")
 
 
 def main(_argv) -> None:
-    from motlab_envs import registry
+    import motlab
+    import motlab_tasks  # noqa: F401  (registers built-in envs)
 
-    env = registry.make(_ENV.value, sim_backend=_SIM_BACKEND.value, num_envs=_NUM_ENVS.value)
-    low = torch.as_tensor(env.action_space.low, dtype=torch.float32, device=env.device)
-    high = torch.as_tensor(env.action_space.high, dtype=torch.float32, device=env.device)
-    shape = (env.num_envs, env.action_space.shape[0])
+    cfg = motlab.make_cfg(_ENV.value)
+    cfg.scene.num_envs = _NUM_ENVS.value
+    env = motlab.ManagerBasedRLEnv(cfg, device="cpu")
+    env.reset()
     for step in range(_STEPS.value):
-        actions = low + torch.rand(shape, device=env.device) * (high - low)
-        state = env.step(actions)
+        actions = 0.1 * torch.randn(env.num_envs, env.action_dim, device=env.device)
+        _, reward, term, trunc, _ = env.step(actions)
         if step % 50 == 0:
-            print(
-                f"step={step} mean_reward={state.reward.mean().item():.3f} "
-                f"dones={int(state.done.sum().item())}"
-            )
+            done = (term | trunc).sum().item()
+            print(f"step={step} mean_reward={reward.mean().item():.3f} dones={done}")
 
 
 if __name__ == "__main__":

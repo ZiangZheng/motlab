@@ -56,6 +56,9 @@ class RslrlCfg:
     algorithm: RslrlAlgorithmCfg = field(default_factory=RslrlAlgorithmCfg)
     policy: RslrlPolicyCfg = field(default_factory=RslrlPolicyCfg)
     runner: RslrlRunnerCfg = field(default_factory=RslrlRunnerCfg)
+    obs_groups: dict[str, list[str]] = field(
+        default_factory=lambda: {"policy": ["policy"], "critic": ["policy"]}
+    )
 
     def to_runner_dict(self) -> dict:
         """Flatten into the dict shape rsl_rl's OnPolicyRunner expects."""
@@ -67,5 +70,6 @@ class RslrlCfg:
         return {
             "algorithm": _d(self.algorithm),
             "policy": _d(self.policy),
+            "obs_groups": dict(self.obs_groups),
             **_d(self.runner),
         }

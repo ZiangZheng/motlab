@@ -1,4 +1,4 @@
-"""Default PPO configs for the cartpole env (SKRL-torch + rsl_rl)."""
+"""Default rsl_rl PPO config for the cartpole env."""
 
 from __future__ import annotations
 
@@ -6,26 +6,9 @@ from dataclasses import dataclass, field
 
 from motlab_rl.registry import rlcfg
 from motlab_rl.rslrl.cfg import RslrlAlgorithmCfg, RslrlCfg, RslrlPolicyCfg, RslrlRunnerCfg
-from motlab_rl.skrl.config import SkrlCfg, SkrlRunnerCfg
 
 
-@rlcfg("cartpole", backend="torch")
-@dataclass
-class CartPoleSkrlCfg(SkrlCfg):
-    num_envs: int = 1024
-    rollouts: int = 16
-    experiment_name: str = "cartpole"
-    runner: SkrlRunnerCfg = field(
-        default_factory=lambda: SkrlRunnerCfg(
-            timesteps=50_000,
-            rollouts=16,
-            learning_rate=3e-4,
-            entropy_loss_scale=0.0,
-        )
-    )
-
-
-@rlcfg("cartpole", backend="torch")
+@rlcfg("cartpole")
 @dataclass
 class CartPoleRslrlCfg(RslrlCfg):
     num_envs: int = 1024

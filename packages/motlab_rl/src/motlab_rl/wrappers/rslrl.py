@@ -1,67 +1,67 @@
-"""rsl_rl VecEnv adapter.
+"""rsl_rl VecEnv adapter for :class:`motlab.envs.ManagerBasedRLEnv`.
 
-rsl_rl's runner expects an object with:
-- attributes ``num_envs``, ``num_obs``, ``num_privileged_obs``, ``num_actions``,
-  ``max_episode_length``, ``device``
-- methods ``get_observations()``, ``reset()``, ``step(actions)``
-- step returns ``(obs, rewards, dones, extras)`` with ``extras["time_outs"]``.
-
-The underlying MotLab env is torch-native, so this wrapper is mostly plumbing
-— shape adjustments (dones → long, time_outs → long) and device placement.
+rsl_rl's runner expects:
+- attributes ``num_envs``, ``num_actions``, ``max_episode_length``,
+  ``episode_length_buf``, ``device``, ``cfg``
+- methods ``get_observations() -> TensorDict``, ``reset()``,
+  ``step(actions) -> (TensorDict, rewards, dones, extras)``
+- ``extras["time_outs"]`` holds the truncation mask.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
-
 import torch
+from tensordict import TensorDict
 
-if TYPE_CHECKING:
-    from motlab_envs.env import TorchEnv
+from motlab.envs.manager_based_rl_env import ManagerBasedRLEnv
 
 
 class RslrlVecEnv:
-    def __init__(self, env: "TorchEnv", device: str | torch.device | None = None):
+    def __init__(
+        self,
+        env: ManagerBasedRLEnv,
+        device: str | torch.device | None = None,
+    ) -> None:
         self.env = env
         self.device = torch.device(device) if device is not None else env.device
         self.num_envs = env.num_envs
-        self.num_obs = int(torch.tensor(env.observation_space.shape).prod().item())
-        self.num_privileged_obs: Optional[int] = None
-        self.num_actions = int(torch.tensor(env.action_space.shape).prod().item())
-        self.max_episode_length = env.cfg.max_episode_steps or int(1e9)
+        self.num_actions = int(env.action_dim)
+        self.max_episode_length = int(env.max_episode_length)
+        self.cfg = env.cfg
 
-        if env.state is None:
-            env.init_state()
+    @property
+    def episode_length_buf(self) -> torch.Tensor:
+        return self.env.episode_length_buf
 
-    # -- internal helpers ---------------------------------------------------
-    def _place(self, t: torch.Tensor, dtype: torch.dtype | None = None) -> torch.Tensor:
-        if dtype is not None and t.dtype != dtype:
-            t = t.to(dtype)
-        if t.device != self.device:
-            t = t.to(self.device)
-        return t
+    @episode_length_buf.setter
+    def episode_length_buf(self, value: torch.Tensor) -> None:
+        self.env.episode_length_buf[:] = value
 
-    def _obs_tensor(self) -> torch.Tensor:
-        assert self.env.state is not None
-        return self._place(self.env.state.obs, dtype=torch.float32)
+    def _to_tensordict(self, obs: dict[str, torch.Tensor]) -> TensorDict:
+        return TensorDict(
+            {k: v.to(dtype=torch.float32, device=self.device) for k, v in obs.items()},
+            batch_size=[self.num_envs],
+            device=self.device,
+        )
 
-    # -- rsl_rl VecEnv API --------------------------------------------------
-    def get_observations(self):
-        return self._obs_tensor(), {"observations": {}}
+    def get_observations(self) -> TensorDict:
+        return self._to_tensordict(self.env._compute_obs())
 
     def reset(self):
-        self.env._state = None
-        self.env.init_state()
-        return self._obs_tensor(), {"observations": {}}
+        obs, info = self.env.reset()
+        return self._to_tensordict(obs), info
 
     def step(self, actions: torch.Tensor):
         actions = actions.detach().to(dtype=torch.float32, device=self.env.device)
-        state = self.env.step(actions)
-        obs = self._place(state.obs, dtype=torch.float32)
-        rewards = self._place(state.reward, dtype=torch.float32)
-        dones = self._place(state.done.to(torch.long))
+        obs, reward, terminated, truncated, info = self.env.step(actions)
+        dones = (terminated | truncated).to(torch.long)
         extras = {
-            "time_outs": self._place(state.truncated.to(torch.long)),
-            "observations": {},
+            "time_outs": truncated.to(torch.long).to(self.device),
+            **info,
         }
-        return obs, rewards, dones, extras
+        return (
+            self._to_tensordict(obs),
+            reward.to(dtype=torch.float32, device=self.device),
+            dones.to(self.device),
+            extras,
+        )

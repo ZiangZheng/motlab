@@ -1,95 +1,102 @@
 """Smoke tests that do not require motrixsim.
 
-Covers pure-Python pieces (base cfg, registry plumbing, managers, rewards).
-End-to-end env tests live in the individual packages and require MotrixSim.
+Covers pure-Python pieces (configclass plumbing, registry, term cfgs, math
+helpers). End-to-end env tests require MotrixSim and live elsewhere.
 """
 
 from __future__ import annotations
-
-from dataclasses import dataclass
 
 import pytest
 import torch
 
 
-def test_env_cfg_defaults():
-    from motlab_envs.base import EnvCfg
+def test_configclass_mutable_defaults():
+    """@configclass auto-wraps mutable defaults so each instance is independent."""
+    from motlab.utils.configclass import configclass
 
-    cfg = EnvCfg()
-    cfg.sim_dt = 0.005
-    cfg.ctrl_dt = 0.02
-    cfg.max_episode_seconds = 10.0
-    cfg.validate()
-    assert cfg.max_episode_steps == 500
-    assert cfg.sim_substeps == 4
+    @configclass
+    class Inner:
+        x: float = 1.0
 
+    @configclass
+    class Outer:
+        inner: Inner = Inner()
+        items: list[int] = [1, 2, 3]
 
-def test_env_cfg_invalid():
-    from motlab_envs.base import EnvCfg
-
-    cfg = EnvCfg()
-    cfg.sim_dt = 0.02
-    cfg.ctrl_dt = 0.01
-    with pytest.raises(ValueError):
-        cfg.validate()
-
-
-def test_registry_roundtrip():
-    from motlab_envs import registry
-    from motlab_envs.base import ABEnv, EnvCfg
-
-    @dataclass
-    class DummyCfg(EnvCfg):
-        pass
-
-    class DummyEnv(ABEnv):
-        def __init__(self, cfg, num_envs=1):
-            self._cfg = cfg
-            self._n = num_envs
-
-        @property
-        def num_envs(self):
-            return self._n
-
-        @property
-        def cfg(self):
-            return self._cfg
-
-        @property
-        def observation_space(self):
-            raise NotImplementedError
-
-        @property
-        def action_space(self):
-            raise NotImplementedError
-
-    registry.register_env_config("dummy", DummyCfg)
-    registry.register_env("dummy", DummyEnv, "torch")
-    assert registry.contains("dummy")
-    env = registry.make("dummy", num_envs=3)
-    assert env.num_envs == 3
-    assert isinstance(env.cfg, DummyCfg)
+    a = Outer()
+    b = Outer()
+    a.inner.x = 99.0
+    a.items.append(4)
+    assert b.inner.x == 1.0
+    assert b.items == [1, 2, 3]
 
 
-def test_reward_manager_weighted_sum():
-    from motlab_envs.managers import RewardManager
+def test_registry_lists_builtin_envs():
+    """Importing motlab_tasks should register cartpole + go1-velocity in motlab."""
+    import motlab
+    import motlab_tasks  # noqa: F401
 
-    mgr = RewardManager()
-    mgr.add("a", lambda _: torch.ones(4), weight=2.0)
-    mgr.add("b", lambda _: torch.full((4,), 0.5), weight=-1.0)
-    total, per_term = mgr.compute(
-        ctx=None, terminated=torch.tensor([False, True, False, False])
+    envs = motlab.list_envs()
+    assert "cartpole" in envs
+    assert "go1-velocity" in envs
+
+
+def test_make_cfg_returns_rl_cfg():
+    import motlab
+    import motlab_tasks  # noqa: F401
+    from motlab import ManagerBasedRLEnvCfg
+
+    cfg = motlab.make_cfg("cartpole")
+    assert isinstance(cfg, ManagerBasedRLEnvCfg)
+    assert cfg.scene is not None
+    assert cfg.observations is not None
+    assert cfg.actions is not None
+    assert cfg.rewards is not None
+    assert cfg.terminations is not None
+
+
+def test_observation_term_cfg_fields():
+    """Term cfgs must accept field-style overrides without dataclass errors."""
+    from motlab.managers.manager_term_cfg import (
+        ObservationTermCfg,
+        RewardTermCfg,
+        TerminationTermCfg,
     )
-    torch.testing.assert_close(per_term["a"], torch.full((4,), 2.0))
-    torch.testing.assert_close(per_term["b"], torch.full((4,), -0.5))
-    # Total should be 1.5 everywhere except the terminated env (zeroed).
-    torch.testing.assert_close(total, torch.tensor([1.5, 0.0, 1.5, 1.5]))
+
+    obs = ObservationTermCfg(func=lambda env: env, scale=2.0)
+    assert obs.scale == 2.0
+    rew = RewardTermCfg(func=lambda env: env, weight=-0.5)
+    assert rew.weight == -0.5
+    term = TerminationTermCfg(func=lambda env: env, time_out=True)
+    assert term.time_out is True
 
 
-def test_tolerance_reward():
-    from motlab_envs.utils.rewards import tolerance
+def test_quat_round_trip():
+    from motlab.utils.math import quat_apply, quat_conjugate, quat_mul
 
-    x = torch.tensor([0.0, 0.5, 1.0, 2.0])
-    out = tolerance(x, bounds=(0.0, 0.0), margin=1.0, sigmoid="linear", value_at_margin=0.0)
-    assert float(out[0]) == pytest.approx(1.0)
-    assert float(out[-1]) == 0.0
+    q = torch.tensor([[1.0, 0.0, 0.0, 0.0]])
+    v = torch.tensor([[1.0, 2.0, 3.0]])
+    out = quat_apply(q, v)
+    torch.testing.assert_close(out, v)
+
+    q2 = torch.tensor([[0.7071068, 0.7071068, 0.0, 0.0]])  # 90° about x
+    inv = quat_conjugate(q2)
+    eye = quat_mul(q2, inv)
+    torch.testing.assert_close(eye[..., 0].abs(), torch.ones(1), atol=1e-5, rtol=1e-5)
+
+
+def test_rl_default_cfg_lookup():
+    import motlab_rl
+    from motlab_rl.rslrl.cfg import RslrlCfg
+
+    cfg = motlab_rl.default_rl_cfg("cartpole")
+    assert isinstance(cfg, RslrlCfg)
+    assert cfg.num_envs > 0
+    assert cfg.runner.experiment_name
+
+
+def test_unknown_env_raises():
+    import motlab
+
+    with pytest.raises(KeyError):
+        motlab.make_cfg("does-not-exist")

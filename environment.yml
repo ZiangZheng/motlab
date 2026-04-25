@@ -13,4 +13,5 @@ dependencies:
       - motrixsim>=0.7.0
       # After `conda env create -f environment.yml && conda activate motlab`,
       # install the workspace packages in editable mode:
-      #   pip install -e packages/motlab_envs -e "packages/motlab_rl[rslrl]"
+      #   pip install -e packages/motlab -e packages/motlab_assets \
+      #              -e packages/motlab_tasks -e "packages/motlab_rl[rslrl]"

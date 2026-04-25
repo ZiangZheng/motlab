@@ -1,11 +1,11 @@
 [project]
-name = "motlab"
+name = "motlab-workspace"
 version = "0.1.0"
-description = "MotLab — a GPU-native reinforcement learning framework for robot training, built on MotrixSim."
+description = "MotLab — a torch-native reinforcement learning framework for robot training, built on MotrixSim."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [{ name = "MotLab Contributors" }]
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.10,<3.13"
 
 [project.optional-dependencies]
 docs = [
@@ -23,13 +23,20 @@ dev = [
 
 # --- uv workspace (optional; ignored by plain pip) -------------------------
 [tool.uv.workspace]
-members = ["packages/motlab_envs", "packages/motlab_rl"]
+members = [
+    "packages/motlab",
+    "packages/motlab_assets",
+    "packages/motlab_tasks",
+    "packages/motlab_rl",
+]
 
 [tool.uv]
 package = false
 
 [tool.uv.sources]
-motlab-envs = { workspace = true }
+motlab = { workspace = true }
+motlab-assets = { workspace = true }
+motlab-tasks = { workspace = true }
 motlab-rl = { workspace = true }
 
 # --- ruff ------------------------------------------------------------------

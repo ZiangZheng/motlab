@@ -9,19 +9,20 @@ import torch
 from absl import app, flags
 
 _ENV = flags.DEFINE_string("env", "cartpole", "Env name.")
-_SIM_BACKEND = flags.DEFINE_string("sim-backend", None, "Sim backend.")
 _NUM_ENVS = flags.DEFINE_integer("num-envs", 4096, "Parallel envs.")
 _STEPS = flags.DEFINE_integer("steps", 500, "Number of control steps.")
 
 
 def main(_argv) -> None:
-    from motlab_envs import registry
+    import motlab
+    import motlab_tasks  # noqa: F401  (registers built-in envs)
 
-    env = registry.make(_ENV.value, sim_backend=_SIM_BACKEND.value, num_envs=_NUM_ENVS.value)
-    action_shape = (env.num_envs, env.action_space.shape[0])
-    actions = torch.zeros(action_shape, dtype=torch.float32, device=env.device)
+    cfg = motlab.make_cfg(_ENV.value)
+    cfg.scene.num_envs = _NUM_ENVS.value
+    env = motlab.ManagerBasedRLEnv(cfg, device="cpu")
+    actions = torch.zeros(env.num_envs, env.action_dim, dtype=torch.float32, device=env.device)
+    env.reset()
 
-    # warmup
     for _ in range(10):
         env.step(actions)
 

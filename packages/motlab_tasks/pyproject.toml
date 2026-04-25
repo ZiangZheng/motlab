@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "motlab-tasks"
+version = "0.1.0"
+description = "Ready-made manager-based environments for MotLab."
+license = { text = "Apache-2.0" }
+authors = [{ name = "MotLab Contributors" }]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "motlab",
+    "motlab-assets",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/motlab_tasks"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/motlab_tasks"]

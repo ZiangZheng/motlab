@@ -15,7 +15,7 @@ set -euo pipefail
 # CLI parsing
 # ---------------------------------------------------------------------------
 METHOD="auto"                # auto | uv | conda | pip
-RLLIB="rslrl"                # rslrl | skrl-torch | skrl-jax | none
+RLLIB="rslrl"                # rslrl | none
 PYTHON_VERSION="3.10"
 CONDA_ENV_NAME="motlab"
 VENV_DIR=".venv"
@@ -28,8 +28,7 @@ usage() {
 
 Options
   --method {auto,uv,conda,pip}   Installer to use (default: auto).
-  --rllib  {rslrl,skrl-torch,skrl-jax,none}
-                                 RL framework extra to install (default: rslrl).
+  --rllib  {rslrl,none}          RL framework extra to install (default: rslrl).
   --python <ver>                 Python version for new venv/conda env (default: 3.10).
   --env <name>                   Conda env name (default: motlab).
   --venv-dir <path>              Path for pip/uv venv (default: .venv).
@@ -85,12 +84,12 @@ fi
 # Build extras string: e.g. "rslrl" -> "packages/motlab_rl[rslrl]"
 # ---------------------------------------------------------------------------
 case "$RLLIB" in
-    rslrl|skrl-torch|skrl-jax)
+    rslrl)
         RL_PKG_SPEC="packages/motlab_rl[$RLLIB]" ;;
     none)
         RL_PKG_SPEC="packages/motlab_rl" ;;
     *)
-        die "Unknown --rllib value: $RLLIB (expected rslrl|skrl-torch|skrl-jax|none)" ;;
+        die "Unknown --rllib value: $RLLIB (expected rslrl|none)" ;;
 esac
 
 # ---------------------------------------------------------------------------
@@ -105,7 +104,7 @@ install_uv() {
     [[ "$RLLIB" != "none" ]] && extra+=(--extra "$RLLIB")
     [[ "$DEV" == "1" ]] && extra+=(--extra dev)
 
-    # Sync all workspace packages; motrixsim is a regular PyPI dep of motlab-envs.
+    # Sync all workspace packages (motlab core + assets + tasks + rl).
     uv sync --all-packages "${extra[@]}"
 
     PYTHON_BIN="$VENV_DIR/bin/python"
@@ -132,7 +131,7 @@ install_conda() {
     conda activate "$CONDA_ENV_NAME"
 
     # Editable installs for workspace packages.
-    pip install -e packages/motlab_envs
+    pip install -e packages/motlab -e packages/motlab_assets -e packages/motlab_tasks
     pip install -e "$RL_PKG_SPEC"
 
     [[ "$DEV" == "1" ]] && pip install pytest ruff pre-commit
@@ -158,7 +157,7 @@ install_pip() {
     PYTHON_BIN="$VENV_DIR/bin/python"
     "$PYTHON_BIN" -m pip install --upgrade pip
     "$PYTHON_BIN" -m pip install motrixsim
-    "$PYTHON_BIN" -m pip install -e packages/motlab_envs
+    "$PYTHON_BIN" -m pip install -e packages/motlab -e packages/motlab_assets -e packages/motlab_tasks
     "$PYTHON_BIN" -m pip install -e "$RL_PKG_SPEC"
 
     [[ "$DEV" == "1" ]] && "$PYTHON_BIN" -m pip install pytest ruff pre-commit
@@ -177,23 +176,23 @@ esac
 # Post-install verification
 # ---------------------------------------------------------------------------
 if [[ "$VERIFY" == "1" ]]; then
-    info "Verifying install (import motlab_envs + step cartpole once) …"
+    info "Verifying install (import motlab + motlab_tasks + step cartpole once) …"
     "$PYTHON_BIN" - <<'PY'
 import sys
 try:
-    import motlab_envs
-    import motlab_envs.registry as reg
-    reg_map = reg.list_registered_envs()
-    assert "cartpole" in reg_map, f"cartpole not registered: {reg_map}"
-    env = reg.make("cartpole", num_envs=2)
     import torch
-    actions = torch.zeros(
-        (env.num_envs, env.action_space.shape[0]),
-        dtype=torch.float32,
-        device=env.device,
-    )
+
+    import motlab
+    import motlab_tasks  # registers built-in envs
+
+    assert "cartpole" in motlab.list_envs(), motlab.list_envs()
+    cfg = motlab.make_cfg("cartpole")
+    cfg.scene.num_envs = 2
+    env = motlab.ManagerBasedRLEnv(cfg, device="cpu")
+    env.reset()
+    actions = torch.zeros(env.num_envs, env.action_dim, dtype=torch.float32, device=env.device)
     env.step(actions)
-    print("OK — motlab_envs imported, cartpole stepped.")
+    print("OK — motlab + motlab_tasks imported, cartpole stepped.")
 except Exception as exc:
     print(f"FAILED: {exc}", file=sys.stderr)
     raise
