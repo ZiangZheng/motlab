@@ -68,8 +68,10 @@ class ManagerBasedRLEnv(ManagerBasedEnv):
         # Termination + reward
         if self.termination_manager is not None:
             self.termination_manager.compute()
-            terminated = self.termination_manager.terminated
-            truncated = self.termination_manager.truncated
+            # Clone so a later self.reset() (which zeros the manager's buffers)
+            # doesn't retroactively wipe the flags we hand back to the trainer.
+            terminated = self.termination_manager.terminated.clone()
+            truncated = self.termination_manager.truncated.clone()
         else:
             terminated = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
             truncated = torch.zeros_like(terminated)

@@ -27,6 +27,7 @@ _FPS = flags.DEFINE_integer("fps", 50, "Video frame rate.")
 _CAMERA = flags.DEFINE_integer("camera", 0, "Camera index in the MJCF.")
 _WIDTH = flags.DEFINE_integer("width", 640, "Render frame width (px).")
 _HEIGHT = flags.DEFINE_integer("height", 480, "Render frame height (px).")
+_CMD = flags.DEFINE_string("cmd", None, "Override command term, e.g. --cmd=base_velocity:1.0,0.0,0.5 (use ; to chain)")
 
 
 def _take_image_blocking(task, timeout_s: float = 5.0):
@@ -122,10 +123,24 @@ def main(_argv) -> None:
     trainer.runner.load(_POLICY.value, load_optimizer=False)
     policy = trainer.runner.get_inference_policy(device=trainer.runner.device)
 
+    cmd_overrides: dict[str, torch.Tensor] = {}
+    if _CMD.value:
+        for spec in _CMD.value.split(";"):
+            name, vals = spec.split(":", 1)
+            cmd_overrides[name.strip()] = torch.tensor(
+                [[float(x) for x in vals.split(",")]] * trainer.env.env.num_envs,
+                dtype=torch.float32, device=trainer.env.env.device,
+            )
+        logger.info("Forcing commands: %s", {k: v[0].tolist() for k, v in cmd_overrides.items()})
+
+    cmd_mgr = trainer.env.env.command_manager
+
     @torch.no_grad()
     def step_fn(obs):
         actions = policy(obs)
         new_obs, _, _, _ = trainer.env.step(actions)
+        for name, value in cmd_overrides.items():
+            cmd_mgr.get_command(name)[:] = value
         return new_obs
 
     if _VIDEO.value:
