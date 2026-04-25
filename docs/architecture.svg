@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 660" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <style>
+      .box { stroke: #334155; stroke-width: 1.5; rx: 10; ry: 10; }
+      .title { font-size: 16px; font-weight: 700; fill: #0f172a; }
+      .sub { font-size: 12px; fill: #1e293b; }
+      .mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; font-size: 11.5px; fill: #1e293b; }
+      .pkg-core { fill: #dbeafe; }
+      .pkg-tasks { fill: #dcfce7; }
+      .pkg-rl { fill: #fef3c7; }
+      .pkg-assets { fill: #fce7f3; }
+      .pkg-bridge { fill: #f1f5f9; }
+      .pkg-script { fill: #e0e7ff; }
+      .pkg-engine { fill: #fee2e2; }
+      .edge { stroke: #475569; stroke-width: 1.6; fill: none; }
+      .label { font-size: 10.5px; fill: #475569; font-style: italic; }
+      .pillar { font-size: 12.5px; font-weight: 600; fill: #0f172a; }
+    </style>
+  </defs>
+
+  <!-- ===== Row 1: scripts ===== -->
+  <rect class="box pkg-script" x="280" y="20" width="400" height="60"/>
+  <text class="title" x="480" y="44" text-anchor="middle">User Scripts</text>
+  <text class="mono" x="480" y="64" text-anchor="middle">scripts/{train, play, view, bench}.py</text>
+
+  <!-- ===== Row 2: rl + tasks ===== -->
+  <!-- motlab_rl -->
+  <rect class="box pkg-rl" x="60" y="120" width="320" height="120"/>
+  <text class="title" x="220" y="146" text-anchor="middle">motlab_rl</text>
+  <text class="sub" x="220" y="166" text-anchor="middle">PPO trainers + per-env hyperparameters</text>
+  <text class="mono" x="220" y="190" text-anchor="middle">rsl_rl  •  skrl   (--framework {rslrl, skrl})</text>
+  <text class="mono" x="220" y="208" text-anchor="middle">@rlcfg / @skrlcfg</text>
+  <text class="mono" x="220" y="226" text-anchor="middle">RslrlVecEnv  •  SkrlVecEnv</text>
+
+  <!-- motlab_tasks -->
+  <rect class="box pkg-tasks" x="580" y="120" width="320" height="120"/>
+  <text class="title" x="740" y="146" text-anchor="middle">motlab_tasks</text>
+  <text class="sub" x="740" y="166" text-anchor="middle">Ready-made env recipes</text>
+  <text class="mono" x="740" y="190" text-anchor="middle">classic/cartpole</text>
+  <text class="mono" x="740" y="208" text-anchor="middle">locomotion/velocity/go1</text>
+  <text class="mono" x="740" y="226" text-anchor="middle">@envcfg fires on import</text>
+
+  <!-- ===== Row 3: motlab core ===== -->
+  <rect class="box pkg-core" x="60" y="280" width="840" height="170"/>
+  <text class="title" x="480" y="306" text-anchor="middle">motlab — core framework</text>
+  <text class="sub" x="480" y="326" text-anchor="middle">ManagerBasedRLEnv  •  IsaacLab-style configclass envs</text>
+
+  <!-- managers row -->
+  <text class="pillar" x="120" y="358" text-anchor="middle">Managers</text>
+  <text class="mono" x="120" y="376" text-anchor="middle">action  •  obs</text>
+  <text class="mono" x="120" y="392" text-anchor="middle">reward  •  term</text>
+  <text class="mono" x="120" y="408" text-anchor="middle">event  •  command</text>
+  <text class="mono" x="120" y="424" text-anchor="middle">curriculum</text>
+
+  <text class="pillar" x="290" y="358" text-anchor="middle">MDP library</text>
+  <text class="mono" x="290" y="376" text-anchor="middle">observations</text>
+  <text class="mono" x="290" y="392" text-anchor="middle">rewards / terminations</text>
+  <text class="mono" x="290" y="408" text-anchor="middle">events / commands</text>
+  <text class="mono" x="290" y="424" text-anchor="middle">joint actions</text>
+
+  <text class="pillar" x="470" y="358" text-anchor="middle">Scene + Assets</text>
+  <text class="mono" x="470" y="376" text-anchor="middle">InteractiveScene</text>
+  <text class="mono" x="470" y="392" text-anchor="middle">Articulation</text>
+  <text class="mono" x="470" y="408" text-anchor="middle">ArticulationData</text>
+  <text class="mono" x="470" y="424" text-anchor="middle">(torch buffers)</text>
+
+  <text class="pillar" x="650" y="358" text-anchor="middle">Actuators</text>
+  <text class="mono" x="650" y="376" text-anchor="middle">ActuatorBase</text>
+  <text class="mono" x="650" y="392" text-anchor="middle">IdealPDActuator</text>
+  <text class="mono" x="650" y="408" text-anchor="middle">(kp / kd / τ-limit)</text>
+  <text class="mono" x="650" y="424" text-anchor="middle">sim2real-ready</text>
+
+  <text class="pillar" x="820" y="358" text-anchor="middle">Utilities</text>
+  <text class="mono" x="820" y="376" text-anchor="middle">@configclass</text>
+  <text class="mono" x="820" y="392" text-anchor="middle">registry / make_cfg</text>
+  <text class="mono" x="820" y="408" text-anchor="middle">torch math (wxyz)</text>
+  <text class="mono" x="820" y="424" text-anchor="middle">SimulationCfg</text>
+
+  <!-- vertical separators inside core -->
+  <line class="edge" stroke-dasharray="3 3" x1="200" y1="345" x2="200" y2="438"/>
+  <line class="edge" stroke-dasharray="3 3" x1="380" y1="345" x2="380" y2="438"/>
+  <line class="edge" stroke-dasharray="3 3" x1="560" y1="345" x2="560" y2="438"/>
+  <line class="edge" stroke-dasharray="3 3" x1="740" y1="345" x2="740" y2="438"/>
+
+  <!-- ===== Row 4: assets + bridge ===== -->
+  <rect class="box pkg-assets" x="60" y="490" width="380" height="100"/>
+  <text class="title" x="250" y="516" text-anchor="middle">motlab_assets</text>
+  <text class="sub" x="250" y="535" text-anchor="middle">Robot ArticulationCfgs + bundled MJCFs</text>
+  <text class="mono" x="250" y="558" text-anchor="middle">CARTPOLE_CFG  •  GO1_CFG</text>
+  <text class="mono" x="250" y="576" text-anchor="middle">xmls/  *.xml + meshes</text>
+
+  <rect class="box pkg-bridge" x="520" y="490" width="380" height="100"/>
+  <text class="title" x="710" y="516" text-anchor="middle">motlab/engine/motrix.py</text>
+  <text class="sub" x="710" y="535" text-anchor="middle">The single np ↔ torch boundary</text>
+  <text class="mono" x="710" y="558" text-anchor="middle">torch.from_numpy(...)  •  data.numpy()</text>
+  <text class="mono" x="710" y="576" text-anchor="middle">quat (wxyz ↔ xyzw) at the boundary</text>
+
+  <!-- ===== Row 5: MotrixSim ===== -->
+  <rect class="box pkg-engine" x="280" y="615" width="400" height="40"/>
+  <text class="title" x="480" y="641" text-anchor="middle">MotrixSim — batched physics solver</text>
+
+  <!-- ===== Edges ===== -->
+  <!-- scripts → rl, tasks -->
+  <path class="edge" marker-end="url(#arrow)" d="M 380 80 C 350 100, 280 100, 220 120"/>
+  <path class="edge" marker-end="url(#arrow)" d="M 580 80 C 610 100, 680 100, 740 120"/>
+
+  <!-- rl → core -->
+  <path class="edge" marker-end="url(#arrow)" d="M 220 240 L 220 280"/>
+  <!-- tasks → core -->
+  <path class="edge" marker-end="url(#arrow)" d="M 740 240 L 740 280"/>
+
+  <!-- core → assets, bridge -->
+  <path class="edge" marker-end="url(#arrow)" d="M 250 450 L 250 490"/>
+  <path class="edge" marker-end="url(#arrow)" d="M 710 450 L 710 490"/>
+
+  <!-- bridge → MotrixSim -->
+  <path class="edge" marker-end="url(#arrow)" d="M 600 590 C 580 605, 560 610, 540 615"/>
+  <!-- assets → MotrixSim (via bridge) -->
+  <path class="edge" marker-end="url(#arrow)" d="M 360 590 C 380 605, 400 610, 420 615"/>
+
+  <!-- legend / annotation -->
+  <text class="label" x="40" y="190" text-anchor="start">trainers</text>
+  <text class="label" x="920" y="190" text-anchor="end">env recipes</text>
+  <text class="label" x="40" y="540" text-anchor="start">robot data</text>
+  <text class="label" x="920" y="540" text-anchor="end">numpy ↔ torch</text>
+</svg>
